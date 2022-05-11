@@ -1,0 +1,22 @@
+:root{
+    --background--dark: #000040;
+    --light: #61619f;
+}
+body{
+    background: linear-gradient(to right top, #000040, #00064a, #000a55, #000d5f, #000f6a, #0a1573, #141a7b, #1c2084, #292b8c, #353594, #403f9b, #4a4aa3);
+    background-repeat: no-repeat;
+    background-size: cover;
+    font-family: 'Roboto', sans-serif !important;
+}
+
+.bg-cdark{
+    background-color:#00002b!important; 
+}
+.dark-input{
+    background: none;
+    -webkit-background-clip: content-box;
+   -moz-background-clip: content-box;
+        background-clip: content-box;
+    border-bottom: rgba(255, 255, 255, 1) !important;
+    outline: none;
+}
