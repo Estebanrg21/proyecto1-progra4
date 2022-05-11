@@ -1,14 +1,18 @@
 DROP DATABASE IF EXISTS proyecto1;
 CREATE DATABASE proyecto1;
 
+DROP USER IF EXISTS 'proyectoAdmin'@'%';
+DROP USER IF EXISTS 'proyectoAdmin'@'localhost';
+CREATE USER 'proyectoAdmin'@'%' IDENTIFIED BY 'root123';
+CREATE USER 'proyectoAdmin'@'localhost' IDENTIFIED BY 'root123';
+GRANT ALL PRIVILEGES ON proyecto1.* TO 'proyectoAdmin'@'%';
+GRANT ALL PRIVILEGES ON proyecto1.* TO 'proyectoAdmin'@'localhost';
 USE proyecto1;
 
 CREATE TABLE users (
-  id bigint NOT NULL AUTO_INCREMENT,
   username varchar(10) NOT NULL,
   password varchar(50) NOT NULL,
-  PRIMARY KEY (id),
-  UNIQUE KEY username_users (username)
+  PRIMARY KEY (username)
 );
 
 CREATE TABLE countries(
@@ -61,3 +65,5 @@ CREATE TABLE match_details(
     FOREIGN KEY (team_id) REFERENCES teams(id) ON UPDATE CASCADE ON DELETE CASCADE,
     FOREIGN KEY (match_id) REFERENCES matches(id) ON UPDATE CASCADE ON DELETE CASCADE
 );
+
+INSERT INTO users VALUES ('admin',md5('admin'));

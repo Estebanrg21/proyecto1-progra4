@@ -5,7 +5,7 @@
  */
 
 
-$host_db = "192.168.100.98";
+$host_db = "localhost";
 $user_db = "proyectoAdmin";
 $passwd_db = "root123";
 $db_name = "proyecto1";
@@ -21,6 +21,12 @@ class Database
         $this->user_db = $u ?? $user_db;
         $this->user_pass_db = $p ?? $passwd_db;
         $this->db = $db ?? $db_name;
+    }
+
+    public static function getConnection(){
+        $db = new Database();
+        $connection = $db->connect();
+        return [$db,$connection];
     }
 
     function connect()
