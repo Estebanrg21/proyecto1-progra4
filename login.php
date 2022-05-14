@@ -14,7 +14,7 @@
                 $_SESSION['username']=$user->username;
                 $_SESSION['verification']=true;
                 $_SESSION['start'] = time();
-                $_SESSION['expire'] = $_SESSION['start'] + (10 * 60);
+               # $_SESSION['expire'] = $_SESSION['start'] + (10 * 60);
                 header("Location: /dashboard.php");
             }else{
                 $loginError="Datos incorrectos";
