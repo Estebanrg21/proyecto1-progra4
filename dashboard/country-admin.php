@@ -147,7 +147,7 @@ require_once(__DIR__ . '/../templates/dashboard-top-template.php')
                                         <form action=\"#\" method=\"get\" class=\"m-0 p-0\">
                                         <input type=\"hidden\" value=\"" . $row['id'] . "\" name=\"id\" />
                                         <button class=\"btn btn-link text-danger px-3 mb-0 \" delete-item>
-                                            <i class=\"far fa-trash-alt me-2\" aria-hidden=\"true\"></i>Eliminar
+                                            <i class=\"far fa-trash-alt me-2\" aria-hidden=\"true\"></i>Delete
                                         </button>
                                         </form>
                                         ";
@@ -182,7 +182,7 @@ $scripts [] = "
 <script>
     document.getElementById('clearMainForm').addEventListener('click', (e) => {
         window.history.replaceState({}, document.title, window.location.pathname);
-        document.getElementById('mainFormTitle').textContent = 'Crear tiempo';
+        document.getElementById('mainFormTitle').textContent = 'Create country';
         let mainField = document.getElementById('mainField');
         if (mainField) mainField.remove();
         document.getElementById('mainFormName').value = '';

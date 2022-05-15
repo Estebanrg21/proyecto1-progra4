@@ -30,16 +30,21 @@ CREATE TABLE teams(
 );
 
 CREATE TABLE tgroups(
-    id bigint PRIMARY KEY NOT NULL AUTO_INCREMENT,
-    name VARCHAR(100) NOT NULL
+    name VARCHAR(5) NOT NULL,
+    edition int NOT NULL,
+    PRIMARY KEY (name,edition)
+
 );
 
 CREATE TABLE group_teams(
+    id bigint PRIMARY KEY NOT NULL AUTO_INCREMENT,
     team_id bigint NOT NULL,
-    group_id bigint NOT NULL,
-    PRIMARY KEY (team_id,group_id),
+    g_name VARCHAR(5) NOT NULL,
+    g_edition int NOT NULL,
+    unique (team_id,g_name,g_edition),
     FOREIGN KEY (team_id) REFERENCES teams(id) ON UPDATE CASCADE ON DELETE CASCADE,
-    FOREIGN KEY (group_id) REFERENCES tgroups(id) ON UPDATE CASCADE ON DELETE CASCADE
+    FOREIGN KEY (g_name) REFERENCES tgroups(name) ON UPDATE CASCADE ON DELETE CASCADE,
+    FOREIGN KEY (g_edition) REFERENCES tgroups(edition) ON UPDATE CASCADE ON DELETE CASCADE
 
 );
 
@@ -47,8 +52,12 @@ CREATE TABLE matches(
     id bigint PRIMARY KEY NOT NULL AUTO_INCREMENT,
     local_team bigint NOT NULL,
     visit_team bigint NOT NULL,
+    g_name VARCHAR(5) NOT NULL,
+    g_edition int NOT NULL,
     FOREIGN KEY (local_team) REFERENCES teams(id) ON UPDATE CASCADE ON DELETE CASCADE,
     FOREIGN KEY (visit_team) REFERENCES teams(id) ON UPDATE CASCADE ON DELETE CASCADE,
+    FOREIGN KEY (g_name) REFERENCES tgroups(name) ON UPDATE CASCADE ON DELETE CASCADE,
+    FOREIGN KEY (g_edition) REFERENCES tgroups(edition) ON UPDATE CASCADE ON DELETE CASCADE,
     INDEX (local_team),
     INDEX (visit_team)
 );

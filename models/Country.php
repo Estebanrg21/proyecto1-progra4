@@ -69,7 +69,7 @@ class Country{
     }
     
     public static function removeCountry($connection,$id){
-        $respose=12;
+        $response=12;
         $statement = $connection->prepare("DELETE FROM countries WHERE id=?");
         $statement->bind_param('i',$id);
         if(isset($statement)){

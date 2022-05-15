@@ -1,8 +1,56 @@
 <?php
 require_once(__DIR__ . "/../models/Country.php");
+require_once(__DIR__ . "/../models/Team.php");
 require_once(__DIR__ . "/../util.php");
 require_once(__DIR__ . "/../database/database.php");
 [$db, $connection] = Database::getConnection();
+
+$fields = ["name", "id", "country"];
+if (areSubmitted($fields)) {
+    if (checkInput($fields)) {
+        $team = new Team($_POST['name'], $_POST['country'], $_POST['id']);
+        $team->connection = $connection;
+        $result = $team->update();
+        [$text, $isOk] = Team::$responseCodes[$result];
+        $infoFormMessage = $text;
+        $classMessage = (($isOk) ? "success" : "danger");
+    } else {
+        $infoFormMessage = "Fields cannot be empty";
+        $classMessage = "danger";
+    }
+} else if (areSubmitted(["id"])) {
+    $team = Team::getTeam($connection, $_POST["id"], null, null, false);
+    if ($team) {
+        $id = $team["id"];
+        $name = $team["name"];
+        $country = $team["country_id"];
+        $blockIdInput = true;
+        $formText = "Update team";
+        $formButtonText = "Update";
+    } else {
+        $infoFormMessage = "Country not found";
+        $classMessage = "danger";
+    }
+} else if (areSubmitted(["name", "country"])) {
+    if (checkInput(["name"])) {
+        $team = new Team($_POST['name'], $_POST['country']);
+        $team->connection = $connection;
+        $result = $team->save();
+        [$text, $isOk] = Team::$responseCodes[$result];
+        $infoFormMessage = $text;
+        $classMessage = (($isOk) ? "success" : "danger");
+    } else {
+        $infoFormMessage = "Field cannot be empty";
+        $classMessage = "danger";
+    }
+}
+
+if (isset($_GET['id'])) {
+    $result = Team::removeTeam($connection, $_GET['id']);
+    [$text, $isOk] = Team::$responseCodes[$result];
+    $deleteResult = $text;
+    $deleteMsgClass = (($isOk) ? "success" : "danger");
+}
 ?>
 
 
@@ -10,28 +58,49 @@ require_once(__DIR__ . "/../database/database.php");
 $option = 2;
 require_once(__DIR__ . '/../templates/dashboard-top-template.php')
 ?>
-
+<?php if (isset($deleteResult)) : ?>
+    <script>
+      window.history.replaceState({}, document.title, `${window.location.pathname}`);
+    </script>
+    <div class="modal" tabindex="-1" id="deleteModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-body d-flex justify-content-center bg-<?php echo (isset($deleteMsgClass) ? $deleteMsgClass : "") ?>">
+                    <p class="text-white fw-bold  m-0 p-0" id=""><?php echo (isset($deleteResult) ? $deleteResult : "") ?></p>
+                </div>
+            </div>
+        </div>
+    </div>
+<?php endif; ?>
 
 <div class="col-12 col-xl-4">
     <div class="card h-100 bg-cdark">
         <div class="card-header pb-0 p-3 border-0 d-flex align-items-center bg-cdark">
-            <h6 class="mb-0 text-white" id="formUserTitle"><?php echo (isset($formText) ? $formText : "Create team") ?></h6>
-            <p class="btn btn-link pe-3 ps-0 mb-0 ms-auto" id="clearUserForm">Clear</p>
+            <h6 class="mb-0 text-white" id="mainFormTitle"><?php echo (isset($formText) ? $formText : "Create team") ?></h6>
+            <p class="btn btn-link pe-3 ps-0 mb-0 ms-auto" id="clearMainForm">Clear</p>
         </div>
         <div class="card-body p-3">
             <form role="form" method="POST" action="#" id="mainForm" style="font-family: 'Roboto', sans-serif !important;">
-                <?php if (isset($errorSubmission)) : ?>
-                    <p class="text-danger text-xs font-weight-bolder mb-3" id="errorMessageMainForm"><?php echo $errorSubmission; ?></p>
+                <p class="text-<?php echo (isset($classMessage) ? $classMessage : " d-none") ?> text-xs font-weight-bolder mb-3" id="messageMainForm"><?php echo (isset($infoFormMessage) ? $infoFormMessage : "") ?></p>
+                <?php if (isset($blockIdInput)) : ?>
+                    <div class="mb-3" id="mainField">
+                        <h6 class="text-uppercase text-body text-xs font-weight-bolder">Team ID</h6>
+                        <div>
+                            <input type="hidden" name="id" value="<?php echo (isset($id) ? $id : "")  ?>">
+                            <input type="text" class="bg-cdark c-input-dark  form-control" id="formId" aria-label="id" aria-describedby="food-time-addon" value="<?php echo (isset($id) ? $id : "")  ?>" <?php echo (isset($blockIdInput) ? "disabled" : "")  ?>>
+                        </div>
+                    </div>
                 <?php endif; ?>
-
                 <div class="mb-3 ">
                     <h6 class="text-uppercase  text-xs font-weight-bolder text-white">Team name</h6>
                     <div>
                         <input type="text" autocomplete="new-password" style="border-bottom-left-radius:0 !important;border-top-left-radius:0 !important;" class="bg-cdark c-input-dark form-control" id="mainFormName" placeholder="Nombre" name="name" aria-label="Nombre" aria-describedby="text-addon" value="<?php echo (isset($name) ? $name : "")  ?>">
                     </div>
                 </div>
+                <h6 class="text-uppercase  text-xs font-weight-bolder text-white">Contry</h6>
                 <div class="input-group flex-md-fill mb-3" style="z-index:0;">
-                    <select class="form-select bg-cdark c-input-dark dark-select" name="fId" id="validateSelect" aria-label="Select">
+                
+                    <select class="form-select bg-cdark c-input-dark dark-select" name="country" id="countrySelect" aria-label="Select">
                         <option selected value="">Country</option>
                         <?php
 
@@ -64,55 +133,52 @@ require_once(__DIR__ . '/../templates/dashboard-top-template.php')
                     <table class="table align-items-center mb-0" style="font-family: 'Roboto', sans-serif !important;">
                         <thead>
                             <tr>
-                                <th class="text-center text-uppercase text-secondary text-xs font-weight-bolder opacity-7 ">Identificador</th>
-                                <th class="text-center text-uppercase text-secondary text-xs font-weight-bolder opacity-7 ps-2 ">Nombre</th>
+                                <th class="text-center text-uppercase text-secondary text-xs font-weight-bolder opacity-7 ">Team ID</th>
+                                <th class="text-center text-uppercase text-secondary text-xs font-weight-bolder opacity-7 ps-2 ">Name</th>
+                                <th class="text-center text-uppercase text-secondary text-xs font-weight-bolder opacity-7 ps-2 ">Country</th>
                                 <th class="text-secondary opacity-7"></th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php
-                            /*
-                            $foodTimes = FoodTime::getAllFoodTimes($connection);
-                            if ($foodTimes) {
-                                while ($row = $foodTimes->fetch_array(MYSQLI_ASSOC)) {
-                                    echo "
-                            <tr>
-                              <td class=\"align-middle text-center text-sm\">
-                                <input type=\"hidden\" value=\"" . $row['id'] . "\" food-time-id />
-                                <p class=\"text-xs font-weight-bold mb-0 \">" . $row["id"] . "</p>
-                              </td>
-                              
-                              <td class=\"align-middle text-center text-sm\">
-                                <input type=\"hidden\"  value=\"" . $row['name'] . "\" food-time-name />
-                                <p class=\"text-xs font-weight-bold mb-0\">" . $row["name"] . "</p>
-                              </td>
 
-                              <td class=\"align-middle text-center text-sm text-wrap\">
-                                <input type=\"hidden\"  value=\"" . $row['description'] . "\" food-time-description />
-                                <p class=\"text-xs font-weight-bold mb-0 text-wrap\">" . $row["description"] . "</p>
-                              </td>";
+                            $teams = Team::getAllTeams($connection);
+                            if ($teams) {
+                                while ($row = $teams->fetch_array(MYSQLI_ASSOC)) {
+                                    echo "
+                                        <tr>
+                                        <td class=\"align-middle text-center text-sm\">
+                                            <p class=\"text-xs font-weight-bold mb-0 \">" . $row["id"] . "</p>
+                                        </td>
+                                        
+                                        <td class=\"align-middle text-center text-sm\">
+                                            <p class=\"text-xs font-weight-bold mb-0\">" . $row["name"] . "</p>
+                                        </td>
+                                        
+                                        <td class=\"align-middle text-center text-sm\">
+                                            <p class=\"text-xs font-weight-bold mb-0\">" . $row["country"] . "</p>
+                                        </td>
+                                    ";
                                     echo "<td><div class=\"d-flex justify-content-center align-items-center\">";
                                     echo "
-                                <form action=\"#\" method=\"get\" class=\"m-0 p-0\">
-                                  <input type=\"hidden\" value=\"" . $row['id'] . "\" name=\"id\" />
-                                  <input type=\"hidden\" value=\"u\" name=\"m\" />
-                                  <button type=\"submit\" class=\"btn btn-link text-dark px-3 mb-0 \" >
-                                    <i class=\"fas fa-pencil-alt text-dark me-2\" aria-hidden=\"true\"></i>Actualizar
-                                  </button>
-                                </form>
-                                ";
+                                        <form action=\"#\" method=\"post\" class=\"m-0 p-0\">
+                                        <input type=\"hidden\" value=\"" . $row['id'] . "\" name=\"id\" />
+                                        <button type=\"submit\" class=\"btn btn-link text-muted px-3 mb-0 \" >
+                                            <i class=\"fas fa-pencil-alt text-muted me-2\" aria-hidden=\"true\"></i>Update
+                                        </button>
+                                        </form>
+                                        ";
                                     echo "
-                                <form action=\"#\" method=\"get\" class=\"m-0 p-0\">
-                                  <input type=\"hidden\" value=\"" . $row['id'] . "\" name=\"id\" />
-                                  <input type=\"hidden\" value=\"d\" name=\"m\" />
-                                  <button class=\"btn btn-link text-danger px-3 mb-0 \" delete-item>
-                                    <i class=\"far fa-trash-alt me-2\" aria-hidden=\"true\"></i>Eliminar
-                                  </button>
-                                </form>
-                                ";
+                                        <form action=\"#\" method=\"get\" class=\"m-0 p-0\">
+                                        <input type=\"hidden\" value=\"" . $row['id'] . "\" name=\"id\" />
+                                        <button class=\"btn btn-link text-danger px-3 mb-0 \" delete-item>
+                                            <i class=\"far fa-trash-alt me-2\" aria-hidden=\"true\"></i>Delete
+                                        </button>
+                                        </form>
+                                        ";
                                     echo "</div></td>";
                                 }
-                            }*/
+                            }
                             ?>
                             <script>
                                 let deleteButtons = Array.prototype.slice.call(document.querySelectorAll('button[delete-item]'));
@@ -120,7 +186,7 @@ require_once(__DIR__ . '/../templates/dashboard-top-template.php')
                                     deleteButtons.forEach((element) => {
                                         element.addEventListener('click', (e) => {
                                             e.preventDefault();
-                                            if (confirm('¿Desea eliminar el tiempo de comida?')) {
+                                            if (confirm('Are you sure?')) {
                                                 e.target.form.submit();
                                             }
                                         })
@@ -134,6 +200,41 @@ require_once(__DIR__ . '/../templates/dashboard-top-template.php')
         </div>
     </div>
 </div>
+<?php if (isset($country)) : ?>
+    <script>
+        let sel = document.getElementById("countrySelect");
+        let option = sel.querySelector("option[value=\"<?php echo $country; ?>\"]");
+        sel.selectedIndex = option.index;
+    </script>
+<?php endif; ?>
+<?php
+
+$scripts [] = "
+    <script>
+    document.getElementById('clearMainForm').addEventListener('click', (e) => {
+        window.history.replaceState({}, document.title, window.location.pathname);
+        document.getElementById('mainFormTitle').textContent = 'Create team';
+        let mainField = document.getElementById('mainField');
+        if (mainField) mainField.remove();
+        document.getElementById('mainFormName').value = '';
+        let sel = document.getElementById('countrySelect');
+        sel.selectedIndex = 0;
+        document.getElementById('mainFormButton').textContent = 'Create';
+        let formMsg = document.getElementById('messageMainForm');
+        formMsg.classList.remove('text-success');
+        formMsg.classList.remove('text-danger');
+        formMsg.classList.add('d-none');
+    });
+    </script>
+";
+?>
+<?php if (isset($deleteResult)) {
+    $scripts [] = "
+    <script >
+        let modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+        modal.show();
+    </script>";
+} ?>
 <?php
 require_once(__DIR__ . '/../templates/dashboard-bottom-template.php')
 ?>
