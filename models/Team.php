@@ -13,6 +13,7 @@ class Team
         0 => ["Team added successfully", true],
         1 => ["Team deleted successfully", true],
         2 => ["Team updated successfully", true],
+        3 => ["Groups created successfully", true],
         10 => ["Data cannot be empty", false],
         12 => ["There is an internal error", false],
         13 => ["The team already exists", false],
@@ -20,6 +21,7 @@ class Team
         15 => ["Teams per country number limit reached", false],
         16 => ["Name length is greater than expected", false],
         17 => ["Teams quantity does not fit the required", false],
+
     ];
 
     private static $FIELDS_LENGTH = [
@@ -204,11 +206,20 @@ class Team
                         $stmt->execute();
                         if (!$stmt)
                             return 12;
+                        foreach ($teams as &$team2) {
+                            if($team2!=$team){
+                                $stmt = $connection->prepare("INSERT INTO matches(local_team,visit_team, group_id, edition_id) VALUES (?,?,?,?)");
+                                $stmt->bind_param('iiii',$team,$team2, $group, $editionId);
+                                $stmt->execute();
+                                if (!$stmt)
+                                    return 12;
+                            }
+                        }
                     }
                 }
             }
 
-            return 0;
+            return 3;
         }
     }
 

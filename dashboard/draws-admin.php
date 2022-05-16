@@ -117,9 +117,11 @@ require_once(__DIR__ . '/../templates/dashboard-top-template.php')
     </div>
 </div>
 <script>
+    let SHOWMESSAGE = true;
     let showGroups = document.getElementById("showGroups");
     if (showGroups) {
         showGroups.addEventListener("click", () => {
+            SHOWMESSAGE = false;
             let sel = document.getElementsByName("edition")[0];
             if (sel) {
                 sel.name = "seeEdition";
@@ -128,6 +130,17 @@ require_once(__DIR__ . '/../templates/dashboard-top-template.php')
             document.getElementById('mainFormButton').textContent = 'Show';
         });
     }
+
+    let submitButton = document.getElementById("mainFormButton");
+    submitButton.addEventListener("click",(e)=>{
+        e.preventDefault();
+        if (SHOWMESSAGE) {
+         if (confirm("WARNING!!\nDo you really want to generate groups? \n \
+         Note: If there are already groups for this edition, all of the information will be overwritten, which means, every progress will be lost")) {
+             e.target.form.submit();
+         }   
+        }
+    });
 </script>
 <?php
 $scripts = [];
@@ -143,18 +156,12 @@ $scripts[] = "
         formMsg.classList.remove('text-danger');
         formMsg.classList.add('d-none');
         sel = document.getElementById('editionSelect');
+        sel.name='edition';
         sel.selectedIndex = 0;
     });
 </script>
 ";
 ?>
-<?php if (isset($deleteResult)) {
-    $scripts[] = "
-    <script >
-        let modal = new bootstrap.Modal(document.getElementById('deleteModal'));
-        modal.show();
-    </script>";
-} ?>
 
 <?php
 require_once(__DIR__ . '/../templates/dashboard-bottom-template.php')
