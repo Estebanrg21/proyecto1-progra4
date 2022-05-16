@@ -5,7 +5,9 @@ class Team
 {
 
     public static $MAX_TEAMS_ALLOWED = 32;
-    public static $MAX__TEAM_COUNTRY_ALLOWED = 4;
+    public static $MAX_TEAM_COUNTRY_ALLOWED = 4;
+    public static $MAX_TEAMS_GROUPS_ALLOWED = 8;
+    public static $MAX_TEAMS_GROUP_ALLOWED = 4;
 
     public static $responseCodes = [
         0 => ["Team added successfully", true],
@@ -14,27 +16,35 @@ class Team
         10 => ["Data cannot be empty", false],
         12 => ["There is an internal error", false],
         13 => ["The team already exists", false],
-        14 =>["Teams number limit reached",false],
-        15 =>["Teams per country number limit reached",false]
+        14 => ["Teams number limit reached", false],
+        15 => ["Teams per country number limit reached", false],
+        16 => ["Name length is greater than expected", false],
+        17 => ["Teams quantity does not fit the required", false],
     ];
 
-    function __construct($name, $country, $id = null)
+    private static $FIELDS_LENGTH = [
+        "name" => 100
+    ];
+
+    function __construct($name, $country, $edition, $id = null)
     {
         $this->name = $name;
         $this->country = $country;
+        $this->country = $country;
+        $this->edition = $edition;
         $this->id = $id;
         $this->connection = null;
     }
 
-    public static function getTeam($connection, $id = null, $name = null, $country = null, $onlyCheckExistance = true)
+    public static function getTeam($connection, $id = null, $name = null, $country = null, $edition = null, $onlyCheckExistance = true)
     {
-        if ((empty($id) && empty($name) && empty($country))) {
+        if ((empty($id) && empty($name) && empty($country) && empty($edition))) {
             throw new Exception("Team fields are empty");
         } else if (empty($id)) {
-            if (empty($name) || empty($country)) throw new Exception("Team fields are empty");
-            $query = "SELECT " . (($onlyCheckExistance) ? "id" : "*") . " FROM teams WHERE name=? AND country_id=?";
-            $fieldMap = "si";
-            $fields = [$name, $country];
+            if (empty($name) || empty($country) || empty($edition)) throw new Exception("Team fields are empty");
+            $query = "SELECT " . (($onlyCheckExistance) ? "id" : "*") . " FROM teams WHERE name=? AND country_id=? AND edition_id=?";
+            $fieldMap = "sii";
+            $fields = [$name, $country, $edition];
         } else {
             $query = "SELECT " . (($onlyCheckExistance) ? "id" : "*") . " FROM teams WHERE id=?";
             $fieldMap = "i";
@@ -52,18 +62,18 @@ class Team
     function save()
     {
         $response = 12;
-        $teamCount = Team::getTeamsCount($this->connection);
-        if($teamCount==null) return $response;
-        if($teamCount==Team::$MAX_TEAMS_ALLOWED)return 14;
-        $countryCount = Team::getCountryCount($this->connection,$this->country);
-        if($countryCount==null) return $response;
-        if($countryCount==Team::$MAX__TEAM_COUNTRY_ALLOWED)return 15;
-        if (empty($this->name)) return 10;
-        
-        if (Team::getTeam($this->connection, null, $this->name, $this->country)) return 13;
+        if (empty($this->name) || empty($this->country)  || empty($this->edition)) return 10;
+        if (strlen($this->name) > Team::$FIELDS_LENGTH["name"]) return 16;
+        $teamCount = Team::getTeamsCount($this->connection, $this->edition);
+        if ($teamCount == null && $teamCount != 0) return $response;
+        if ($teamCount == Team::$MAX_TEAMS_ALLOWED) return 14;
+        $countryCount = Team::getCountryCount($this->connection, $this->country, $this->edition);
+        if ($countryCount == null && $teamCount != 0) return $response;
+        if ($countryCount == Team::$MAX_TEAM_COUNTRY_ALLOWED) return 15;
+        if (Team::getTeam($this->connection, null, $this->name, $this->country, $this->edition)) return 13;
         else {
-            $statement = $this->connection->prepare("INSERT INTO teams(name,country_id) VALUES (?, ?)");
-            $statement->bind_param('si', $this->name, $this->country);
+            $statement = $this->connection->prepare("INSERT INTO teams(name,country_id,edition_id) VALUES (?, ?, ?)");
+            $statement->bind_param('sii', $this->name, $this->country, $this->edition);
             $response = 0;
         }
         if (isset($statement)) {
@@ -76,10 +86,10 @@ class Team
     function update()
     {
         $response = 12;
-        if (empty($this->name) || empty($this->country)) return 10;
-        if (Team::getTeam($this->connection,$this->id)) {
-            $statement = $this->connection->prepare("UPDATE  teams SET name=?, country_id=? WHERE id=?");
-            $statement->bind_param('sii', $this->name, $this->country, $this->id);
+        if (empty($this->name) || empty($this->country) || empty($this->edition)) return 10;
+        if (Team::getTeam($this->connection, $this->id)) {
+            $statement = $this->connection->prepare("UPDATE  teams SET name=?, country_id=?,edition_id=? WHERE id=?");
+            $statement->bind_param('siii', $this->name, $this->country, $this->edition, $this->id);
             $response = 2;
         } else {
             return 11;
@@ -103,24 +113,28 @@ class Team
         return $response;
     }
 
-    public static function getTeamsCount($connection){
-        $result = $connection->query("SELECT count(id) as id from teams");
-        if ($result) {
-            $arr=$result->fetch_array(MYSQLI_ASSOC);
+    public static function getTeamsCount($connection, $edition)
+    {
+        $statement = $connection->prepare("SELECT count(id) as id from teams WHERE edition_id=?");
+        $statement->bind_param('i', $edition);
+        $statement->execute();
+        if ($statement) {
+            $result = $statement->get_result();
+            $arr = $result->fetch_array(MYSQLI_ASSOC);
             return  $arr["id"];
         }
         return null;
     }
 
-    public static function getCountryCount($connection,$countryId){
-        $statement = $connection->prepare("SELECT count(country_id) as country from teams where country_id=?");
-        $statement->bind_param('i', $countryId);
+    public static function getCountryCount($connection, $countryId, $editionId)
+    {
+        $statement = $connection->prepare("SELECT count(country_id) as country from teams where country_id=? AND edition_id=?");
+        $statement->bind_param('ii', $countryId, $editionId);
         $statement->execute();
         if ($statement) {
             $result = $statement->get_result();
-            $arr=$result->fetch_array(MYSQLI_ASSOC);
-            return  $arr["country"];   
-            
+            $arr = $result->fetch_array(MYSQLI_ASSOC);
+            return  $arr["country"];
         }
         return null;
     }
@@ -132,5 +146,96 @@ class Team
         FROM teams JOIN countries on country_id=countries.id
         ");
         return $result;
+    }
+
+    public static function getAllTeamsByEdition($connection, $editionId, $onlyId = false)
+    {
+        if ($onlyId) {
+            $query = "SELECT id FROM teams WHERE edition_id=?";
+        } else {
+            $query = "
+            SELECT teams.id,teams.name as name, countries.name as country 
+            FROM teams JOIN countries on country_id=countries.id WHERE edition_id=?
+            ";
+        }
+        $statement = $connection->prepare($query);
+        $statement->bind_param('i', $editionId);
+        $statement->execute();
+        if ($statement)
+            return $statement->get_result();
+        return null;
+    }
+
+    public static function draw($connection, $editionId)
+    {
+        if (empty($editionId)) return 10;
+        if (!(Edition::getEdtion($connection, $editionId))) return 12;
+        $statement = $connection->prepare("DELETE FROM tgroups WHERE edition_id=?");
+        $statement->bind_param('i', $editionId);
+        $statement->execute();
+        if ($statement) {
+            if (Team::getTeamsCount($connection, $editionId) != Team::$MAX_TEAMS_ALLOWED) return 17;
+            $groupsNames = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+            $groups = [];
+            foreach ($groupsNames as $name) {
+                $stmt = $connection->prepare("INSERT INTO tgroups (name, edition_id) VALUES (?, ?)");
+                $stmt->bind_param('si', $name, $editionId);
+                $stmt->execute();
+                if ($stmt)
+                    $groups += [$stmt->insert_id => []];
+            }
+            if (count($groups) < Team::$MAX_TEAMS_GROUPS_ALLOWED) return 12;
+            $teams = Team::getAllTeamsByEdition($connection, $editionId, true);
+            if (!$teams) return 12;
+            $teams = $teams->fetch_all(MYSQLI_ASSOC);
+            shuffle($teams);
+            foreach ($groups as &$group) {
+                while (count($group) < Team::$MAX_TEAMS_GROUP_ALLOWED) {
+                    $group[] = end($teams)["id"];
+                    unset($teams[array_key_last($teams)]);
+                }
+            }
+
+            foreach ($groups as $group => $teams) {
+                if (is_iterable($teams)) {
+                    foreach ($teams as &$team) {
+                        $stmt = $connection->prepare("INSERT INTO group_teams(team_id, group_id, edition_id) VALUES (?,?,?)");
+                        $stmt->bind_param('iii', $team, $group, $editionId);
+                        $stmt->execute();
+                        if (!$stmt)
+                            return 12;
+                    }
+                }
+            }
+
+            return 0;
+        }
+    }
+
+    public static function getTeamGroupsByEdition($connection,$editionId){
+        $statement = $connection->prepare("select teams.name as team, countries.name as country, 
+        tgroups.name as tgroup from group_teams join teams on group_teams.team_id=teams.id 
+        join countries on teams.country_id=countries.id 
+        join tgroups on group_teams.group_id=tgroups.id where group_teams.edition_id=?");
+        $statement->bind_param('i', $editionId);
+        $statement->execute();
+        if ($statement){
+            $result=$statement->get_result();
+            $result = $result->fetch_all(MYSQLI_ASSOC);
+            $groups = array_unique(array_column($result,"tgroup","tgroup"));
+            $groups=array_fill_keys($groups, []);
+            foreach ($result as $row) {
+                if (isset($groups[$row["tgroup"]])) {
+                    $groups[$row["tgroup"]][]=[
+                        "team"=>$row["team"],
+                        "country"=>$row["country"]
+                    ];  
+                }
+            }
+            
+            return $groups;
+
+        }
+        return null;
     }
 }

@@ -1,15 +1,15 @@
 <?php
-require_once(__DIR__ . "/../models/Country.php");
+require_once(__DIR__ . "/../models/Edition.php");
 require_once(__DIR__ . "/../util.php");
 require_once(__DIR__ . "/../database/database.php");
 [$db, $connection] = Database::getConnection();
 
 if (areSubmitted(["name", "id"])) {
     if (checkInput(["name"])) {
-        $country = new Country($_POST['name'], $_POST['id']);
-        $country->connection = $connection;
-        $result = $country->update();
-        [$text, $isOk] = Country::$responseCodes[$result];
+        $edition = new Edition($_POST['name'], $_POST['id']);
+        $edition->connection = $connection;
+        $result = $edition->update();
+        [$text, $isOk] = Edition::$responseCodes[$result];
         $infoFormMessage = $text;
         $classMessage = (($isOk) ? "success" : "danger");
     } else {
@@ -17,23 +17,23 @@ if (areSubmitted(["name", "id"])) {
         $classMessage = "danger";
     }
 } else if (areSubmitted(["id"])) {
-    $country = Country::getCountry($connection, $_POST["id"], true, false);
-    if ($country) {
-        $id = $country["id"];
-        $name = $country["name"];
+    $edition = Edition::getEdtion($connection, $_POST["id"], false);
+    if ($edition) {
+        $id = $edition["id"];
+        $name = $edition["name"];
         $blockIdInput = true;
-        $formText = "Update country";
+        $formText = "Update edition";
         $formButtonText = "Update";
     } else {
-        $infoFormMessage = "Country not found";
+        $infoFormMessage = "Edition not found";
         $classMessage = "danger";
     }
 } else if (areSubmitted(["name"])) {
     if (checkInput(["name"])) {
-        $country = new Country($_POST['name']);
-        $country->connection = $connection;
-        $result = $country->save();
-        [$text, $isOk] = Country::$responseCodes[$result];
+        $edition = new Edition($_POST['name']);
+        $edition->connection = $connection;
+        $result = $edition->save();
+        [$text, $isOk] = Edition::$responseCodes[$result];
         $infoFormMessage = $text;
         $classMessage = (($isOk) ? "success" : "danger");
     } else {
@@ -43,8 +43,8 @@ if (areSubmitted(["name", "id"])) {
 }
 
 if (isset($_GET['id'])) {
-    $result = Country::removeCountry($connection, $_GET['id']);
-    [$text, $isOk] = Country::$responseCodes[$result];
+    $result = Edition::removeEdition($connection, $_GET['id']);
+    [$text, $isOk] = Edition::$responseCodes[$result];
     $deleteResult = $text;
     $deleteMsgClass = (($isOk) ? "success" : "danger");
 }
@@ -52,7 +52,7 @@ if (isset($_GET['id'])) {
 
 
 <?php
-$option = 2;
+$option = 1;
 require_once(__DIR__ . '/../templates/dashboard-top-template.php')
 ?>
 <?php if (isset($deleteResult)) : ?>
@@ -72,7 +72,7 @@ require_once(__DIR__ . '/../templates/dashboard-top-template.php')
 <div class="col-12 col-xl-4">
     <div class="card h-100 bg-cdark">
         <div class="card-header pb-0 p-3 border-0 d-flex align-items-center bg-cdark">
-            <h6 class="mb-0 text-white" id="mainFormTitle"><?php echo (isset($formText) ? $formText : "Add country") ?></h6>
+            <h6 class="mb-0 text-white" id="mainFormTitle"><?php echo (isset($formText) ? $formText : "Add edition") ?></h6>
             <p class="btn btn-link pe-3 ps-0 mb-0 ms-auto" id="clearMainForm">Clear</p>
         </div>
         <div class="card-body p-3">
@@ -80,7 +80,7 @@ require_once(__DIR__ . '/../templates/dashboard-top-template.php')
                 <p class="text-<?php echo (isset($classMessage) ? $classMessage : " d-none") ?> text-xs font-weight-bolder mb-3" id="messageMainForm"><?php echo (isset($infoFormMessage) ? $infoFormMessage : "") ?></p>
                 <?php if (isset($blockIdInput)) : ?>
                     <div class="mb-3" id="mainField">
-                        <h6 class="text-uppercase text-body text-xs font-weight-bolder">Country ID</h6>
+                        <h6 class="text-uppercase text-body text-xs font-weight-bolder">Edition ID</h6>
                         <div>
                             <input type="hidden" name="id" value="<?php echo (isset($id) ? $id : "")  ?>">
                             <input type="text" class="bg-cdark c-input-dark  form-control" id="formId" aria-label="id" aria-describedby="food-time-addon" value="<?php echo (isset($id) ? $id : "")  ?>" <?php echo (isset($blockIdInput) ? "disabled" : "")  ?>>
@@ -88,7 +88,7 @@ require_once(__DIR__ . '/../templates/dashboard-top-template.php')
                     </div>
                 <?php endif; ?>
                 <div class="mb-3 ">
-                    <h6 class="text-uppercase  text-xs font-weight-bolder text-white">Country name</h6>
+                    <h6 class="text-uppercase  text-xs font-weight-bolder text-white">Edition name</h6>
                     <div>
                         <input type="text" autocomplete="new-password" style="border-bottom-left-radius:0 !important;border-top-left-radius:0 !important;" class="bg-cdark c-input-dark form-control" id="mainFormName" placeholder="Name" name="name" aria-label="Name" aria-describedby="text-addon" value="<?php echo (isset($name) ? $name : "")  ?>">
                     </div>
@@ -105,7 +105,7 @@ require_once(__DIR__ . '/../templates/dashboard-top-template.php')
     <div class="col-12">
         <div class="card mb-4 bg-cdark">
             <div class="card-header pb-0 bg-cdark">
-                <h6 class="text-white">Countries</h6>
+                <h6 class="text-white">Editions</h6>
             </div>
             <div class="card-body px-0 pt-0 pb-2">
                 <div class="table-responsive p-0">
@@ -120,13 +120,13 @@ require_once(__DIR__ . '/../templates/dashboard-top-template.php')
                         <tbody>
                             <?php
 
-                            $countries = Country::getAllCountries($connection);
-                            if ($countries) {
-                                while ($row = $countries->fetch_array(MYSQLI_ASSOC)) {
+                            $editions = Edition::getAllEditions($connection);
+                            if ($editions) {
+                                while ($row = $editions->fetch_array(MYSQLI_ASSOC)) {
                                     echo "
                                         <tr>
                                         <td class=\"align-middle text-center text-sm\">
-                                            <input type=\"hidden\" value=\"" . $row['id'] . "\" country-id />
+                                            <input type=\"hidden\" value=\"" . $row['id'] . "\" edition-id />
                                             <p class=\"text-xs font-weight-bold mb-0 \">" . $row["id"] . "</p>
                                         </td>
                                         
@@ -182,7 +182,7 @@ $scripts [] = "
 <script>
     document.getElementById('clearMainForm').addEventListener('click', (e) => {
         window.history.replaceState({}, document.title, window.location.pathname);
-        document.getElementById('mainFormTitle').textContent = 'Create country';
+        document.getElementById('mainFormTitle').textContent = 'Add edition';
         let mainField = document.getElementById('mainField');
         if (mainField) mainField.remove();
         document.getElementById('mainFormName').value = '';

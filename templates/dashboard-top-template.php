@@ -45,29 +45,34 @@ if ($now > $_SESSION['expire']) {
                 </a>
             </li>
 
-            
+            <li class="nav-item">
+                <a class="nav-link <?php echo (isset($option) ? (($option==1)?"active":"") : "") ?>" href="../dashboard/editions-admin.php">
+
+                    <span class="nav-link-text ms-1 text-wrap">Edition management</span>
+                </a>
+            </li>
 
             <li class="nav-item">
-                <a class="nav-link <?php echo (isset($option) ? (($option==1)?"active":"") : "") ?>" href="../dashboard/country-admin.php">
+                <a class="nav-link <?php echo (isset($option) ? (($option==2)?"active":"") : "") ?>" href="../dashboard/country-admin.php">
 
                     <span class="nav-link-text ms-1 text-wrap">Country management</span>
                 </a>
             </li>
 
             <li class="nav-item">
-                <a class="nav-link <?php echo (isset($option) ? (($option==2)?"active":"") : "") ?>" href="../dashboard/teams-admin.php">
+                <a class="nav-link <?php echo (isset($option) ? (($option==3)?"active":"") : "") ?>" href="../dashboard/teams-admin.php">
                     <span class="nav-link-text ms-1 text-wrap">Team management</span>
                 </a>
             </li>
 
             <li class="nav-item">
-                <a class="nav-link <?php echo (isset($option) ? (($option==3)?"active":"") : "") ?>" href="../dashboard/draws-admin.php">
+                <a class="nav-link <?php echo (isset($option) ? (($option==4)?"active":"") : "") ?>" href="../dashboard/draws-admin.php">
                     <span class="nav-link-text ms-1 text-wrap">Draw</span>
                 </a>
             </li>
 
             <li class="nav-item">
-                <a class="nav-link <?php echo (isset($option) ? (($option==4)?"active":"") : "") ?>" href="../dashboard/results-admin.php">
+                <a class="nav-link <?php echo (isset($option) ? (($option==5)?"active":"") : "") ?>" href="../dashboard/results-admin.php">
                     <span class="nav-link-text ms-1 text-wrap">Results management</span>
                 </a>
             </li>

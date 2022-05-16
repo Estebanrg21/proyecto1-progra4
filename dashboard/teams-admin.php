@@ -1,14 +1,15 @@
 <?php
 require_once(__DIR__ . "/../models/Country.php");
+require_once(__DIR__ . "/../models/Edition.php");
 require_once(__DIR__ . "/../models/Team.php");
 require_once(__DIR__ . "/../util.php");
 require_once(__DIR__ . "/../database/database.php");
 [$db, $connection] = Database::getConnection();
 
-$fields = ["name", "id", "country"];
+$fields = ["name", "id", "country", "edition"];
 if (areSubmitted($fields)) {
     if (checkInput($fields)) {
-        $team = new Team($_POST['name'], $_POST['country'], $_POST['id']);
+        $team = new Team($_POST['name'], $_POST['country'], $_POST['edition'], $_POST['id']);
         $team->connection = $connection;
         $result = $team->update();
         [$text, $isOk] = Team::$responseCodes[$result];
@@ -19,21 +20,22 @@ if (areSubmitted($fields)) {
         $classMessage = "danger";
     }
 } else if (areSubmitted(["id"])) {
-    $team = Team::getTeam($connection, $_POST["id"], null, null, false);
+    $team = Team::getTeam($connection, $_POST["id"], null, null, null, false);
     if ($team) {
         $id = $team["id"];
         $name = $team["name"];
         $country = $team["country_id"];
+        $edition = $team["edition_id"];
         $blockIdInput = true;
         $formText = "Update team";
         $formButtonText = "Update";
     } else {
-        $infoFormMessage = "Country not found";
+        $infoFormMessage = "Team not found";
         $classMessage = "danger";
     }
-} else if (areSubmitted(["name", "country"])) {
+} else if (areSubmitted(["name", "country", "edition"])) {
     if (checkInput(["name"])) {
-        $team = new Team($_POST['name'], $_POST['country']);
+        $team = new Team($_POST['name'], $_POST['country'], $_POST['edition']);
         $team->connection = $connection;
         $result = $team->save();
         [$text, $isOk] = Team::$responseCodes[$result];
@@ -42,6 +44,17 @@ if (areSubmitted($fields)) {
     } else {
         $infoFormMessage = "Field cannot be empty";
         $classMessage = "danger";
+    }
+} else if (areSubmitted(["editionTeams"])) {
+    if (checkInput(["editionTeams"])) {
+        $teams = Team::getAllTeamsByEdition($connection, $_POST["editionTeams"]);
+        if (empty($teams)) {
+            $deleteResult = "Teams couldn't be found";
+            $deleteMsgClass = "danger";
+        }
+    } else {
+        $deleteResult = "Invalid edition";
+        $deleteMsgClass = "danger";
     }
 }
 
@@ -55,12 +68,12 @@ if (isset($_GET['id'])) {
 
 
 <?php
-$option = 2;
+$option = 3;
 require_once(__DIR__ . '/../templates/dashboard-top-template.php')
 ?>
 <?php if (isset($deleteResult)) : ?>
     <script>
-      window.history.replaceState({}, document.title, `${window.location.pathname}`);
+        window.history.replaceState({}, document.title, `${window.location.pathname}`);
     </script>
     <div class="modal" tabindex="-1" id="deleteModal">
         <div class="modal-dialog">
@@ -99,7 +112,7 @@ require_once(__DIR__ . '/../templates/dashboard-top-template.php')
                 </div>
                 <h6 class="text-uppercase  text-xs font-weight-bolder text-white">Contry</h6>
                 <div class="input-group flex-md-fill mb-3" style="z-index:0;">
-                
+
                     <select class="form-select bg-cdark c-input-dark dark-select" name="country" id="countrySelect" aria-label="Select">
                         <option selected value="">Country</option>
                         <?php
@@ -107,6 +120,23 @@ require_once(__DIR__ . '/../templates/dashboard-top-template.php')
                         $countries = Country::getAllCountries($connection);
                         if ($countries) {
                             while ($row = $countries->fetch_array(MYSQLI_ASSOC)) {
+                                echo "<option  value=\"" . $row["id"] . "\">" . $row["name"] . "</option>";
+                            }
+                        }
+
+                        ?>
+                    </select>
+                </div>
+                <h6 class="text-uppercase  text-xs font-weight-bolder text-white">Edition</h6>
+                <div class="input-group flex-md-fill mb-3" style="z-index:0;">
+
+                    <select class="form-select bg-cdark c-input-dark dark-select" name="edition" id="editionSelect" aria-label="Select">
+                        <option selected value="">Edition</option>
+                        <?php
+
+                        $editions = Edition::getAllEditions($connection);
+                        if ($editions) {
+                            while ($row = $editions->fetch_array(MYSQLI_ASSOC)) {
                                 echo "<option  value=\"" . $row["id"] . "\">" . $row["name"] . "</option>";
                             }
                         }
@@ -124,9 +154,25 @@ require_once(__DIR__ . '/../templates/dashboard-top-template.php')
 
 <div class="row mt-4">
     <div class="col-12">
-        <div class="card mb-4 bg-cdark">
-            <div class="card-header pb-0 bg-cdark">
+        <div class="card mb-4 bg-cdark px-3">
+            <div class="card-header pb-0 bg-cdark d-flex">
                 <h6 class="text-white">Teams</h6>
+            </div>
+            <div class="input-group w-30 mb-3" style="z-index:0;">
+                <form action="#" method="post" id="editionTeamsForm">
+                    <select class="form-select bg-cdark c-input-dark dark-select " name="editionTeams" id="editionsSelect" aria-label="Select">
+                        <option selected value="">Edition</option>
+                        <?php
+                        $editions = Edition::getAllEditions($connection);
+                        if ($editions) {
+                            while ($row = $editions->fetch_array(MYSQLI_ASSOC)) {
+                                echo "<option  value=\"" . $row["id"] . "\">" . $row["name"] . "</option>";
+                            }
+                        }
+
+                        ?>
+                    </select>
+                </form>
             </div>
             <div class="card-body px-0 pt-0 pb-2">
                 <div class="table-responsive p-0">
@@ -141,11 +187,10 @@ require_once(__DIR__ . '/../templates/dashboard-top-template.php')
                         </thead>
                         <tbody>
                             <?php
-
-                            $teams = Team::getAllTeams($connection);
-                            if ($teams) {
-                                while ($row = $teams->fetch_array(MYSQLI_ASSOC)) {
-                                    echo "
+                            if (isset($teams)) {
+                                if ($teams) {
+                                    while ($row = $teams->fetch_array(MYSQLI_ASSOC)) {
+                                        echo "
                                         <tr>
                                         <td class=\"align-middle text-center text-sm\">
                                             <p class=\"text-xs font-weight-bold mb-0 \">" . $row["id"] . "</p>
@@ -159,8 +204,8 @@ require_once(__DIR__ . '/../templates/dashboard-top-template.php')
                                             <p class=\"text-xs font-weight-bold mb-0\">" . $row["country"] . "</p>
                                         </td>
                                     ";
-                                    echo "<td><div class=\"d-flex justify-content-center align-items-center\">";
-                                    echo "
+                                        echo "<td><div class=\"d-flex justify-content-center align-items-center\">";
+                                        echo "
                                         <form action=\"#\" method=\"post\" class=\"m-0 p-0\">
                                         <input type=\"hidden\" value=\"" . $row['id'] . "\" name=\"id\" />
                                         <button type=\"submit\" class=\"btn btn-link text-muted px-3 mb-0 \" >
@@ -168,7 +213,7 @@ require_once(__DIR__ . '/../templates/dashboard-top-template.php')
                                         </button>
                                         </form>
                                         ";
-                                    echo "
+                                        echo "
                                         <form action=\"#\" method=\"get\" class=\"m-0 p-0\">
                                         <input type=\"hidden\" value=\"" . $row['id'] . "\" name=\"id\" />
                                         <button class=\"btn btn-link text-danger px-3 mb-0 \" delete-item>
@@ -176,7 +221,8 @@ require_once(__DIR__ . '/../templates/dashboard-top-template.php')
                                         </button>
                                         </form>
                                         ";
-                                    echo "</div></td>";
+                                        echo "</div></td>";
+                                    }
                                 }
                             }
                             ?>
@@ -200,16 +246,29 @@ require_once(__DIR__ . '/../templates/dashboard-top-template.php')
         </div>
     </div>
 </div>
-<?php if (isset($country)) : ?>
+<?php if (isset($country) && isset($edition)) : ?>
     <script>
         let sel = document.getElementById("countrySelect");
         let option = sel.querySelector("option[value=\"<?php echo $country; ?>\"]");
         sel.selectedIndex = option.index;
+        sel = document.getElementById("editionSelect");
+        option = sel.querySelector("option[value=\"<?php echo $edition; ?>\"]");
+        sel.selectedIndex = option.index;
     </script>
 <?php endif; ?>
-<?php
 
-$scripts [] = "
+<script>
+    let editionTeamsSelect = document.getElementById("editionsSelect");
+    if (editionTeamsSelect) {
+        editionTeamsSelect.addEventListener("change", () => {
+            let form = document.getElementById("editionTeamsForm");
+            if (form)
+                form.submit();
+        });
+    }
+</script>
+<?php
+$scripts[] = "
     <script>
     document.getElementById('clearMainForm').addEventListener('click', (e) => {
         window.history.replaceState({}, document.title, window.location.pathname);
@@ -218,6 +277,8 @@ $scripts [] = "
         if (mainField) mainField.remove();
         document.getElementById('mainFormName').value = '';
         let sel = document.getElementById('countrySelect');
+        sel.selectedIndex = 0;
+        sel = document.getElementById('editionSelect');
         sel.selectedIndex = 0;
         document.getElementById('mainFormButton').textContent = 'Create';
         let formMsg = document.getElementById('messageMainForm');
@@ -229,7 +290,7 @@ $scripts [] = "
 ";
 ?>
 <?php if (isset($deleteResult)) {
-    $scripts [] = "
+    $scripts[] = "
     <script >
         let modal = new bootstrap.Modal(document.getElementById('deleteModal'));
         modal.show();

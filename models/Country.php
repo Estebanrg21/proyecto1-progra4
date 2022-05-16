@@ -11,6 +11,11 @@ class Country{
         11=>["Update cannot be done because item does not exists",false],
         12=>["There is an internal error",false],
         13=>["The country already exists",false],
+        14=>["Name length is greater than expected",false],
+    ];
+
+    private static $FIELDS_LENGTH= [
+        "name"=>100
     ];
 
     function __construct($name,$id=null){
@@ -38,6 +43,7 @@ class Country{
     function save(){
         $response = 12;
         if(empty($this->name)) return 10;
+        if(strlen($this->name)>Country::$FIELDS_LENGTH["name"]) return 14;
         if(Country::getCountry($this->connection,$this->name,false)) return 13;
         else{
             $statement = $this->connection->prepare("INSERT INTO countries(name) VALUES (?)");
@@ -72,7 +78,7 @@ class Country{
         $response=12;
         $statement = $connection->prepare("DELETE FROM countries WHERE id=?");
         $statement->bind_param('i',$id);
-        if(isset($statement)){
+        if($statement){
             $statement->execute();
             if($statement) $response=1;
         }
