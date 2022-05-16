@@ -222,7 +222,14 @@ class Team
             return 3;
         }
     }
-
+    public static function getGroupsByEdition($connection, $editionId){
+        $statement = $connection->prepare("select * from tgroups where edition_id=?");
+        $statement->bind_param('i', $editionId);
+        $statement->execute();
+        if ($statement)
+            return $statement->get_result();
+        return null;
+    }
     public static function getTeamGroupsByEdition($connection,$editionId){
         $statement = $connection->prepare("select teams.name as team, countries.name as country, 
         tgroups.name as tgroup from group_teams join teams on group_teams.team_id=teams.id 
@@ -248,5 +255,12 @@ class Team
 
         }
         return null;
+    }
+    public static function getGroupsStatus($connection){
+        $result = $connection->query("
+        SELECT teams.id,teams.name as name, countries.name as country 
+        FROM teams JOIN countries on country_id=countries.id
+        ");
+        $result->fetch_array(MYSQLI_ASSOC);
     }
 }

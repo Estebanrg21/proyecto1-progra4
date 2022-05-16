@@ -22,3 +22,13 @@ function areSubmitted($names){
         return isset($container[$value]);
     });
 }
+
+function checkIfAreNumeric($fields){
+    $isOk = true;
+    foreach ($fields as $field) {
+        if(!is_numeric($field)){
+            return !$isOk;
+        }
+    }
+    return $isOk;
+}

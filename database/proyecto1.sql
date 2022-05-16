@@ -63,6 +63,7 @@ CREATE TABLE matches(
     visit_team bigint NOT NULL,
     group_id bigint NOT NULL,
     edition_id bigint NOT NULL,
+    result VARCHAR(5) NOT NULL DEFAULT '-',
     FOREIGN KEY (local_team) REFERENCES teams(id) ON UPDATE CASCADE ON DELETE CASCADE,
     FOREIGN KEY (visit_team) REFERENCES teams(id) ON UPDATE CASCADE ON DELETE CASCADE,
     FOREIGN KEY (group_id) REFERENCES tgroups(id) ON UPDATE CASCADE ON DELETE CASCADE,
@@ -78,10 +79,8 @@ CREATE TABLE match_details(
     goals_favor int NOT NULL,
     goals_against int NOT NULL,
     result VARCHAR(5) NOT NULL,
-    edition_id bigint NOT NULL,
     INDEX (match_id),
     INDEX (team_id),
-    FOREIGN KEY (edition_id) REFERENCES editions(id) ON UPDATE CASCADE ON DELETE CASCADE,
     FOREIGN KEY (team_id) REFERENCES teams(id) ON UPDATE CASCADE ON DELETE CASCADE,
     FOREIGN KEY (match_id) REFERENCES matches(id) ON UPDATE CASCADE ON DELETE CASCADE
 );

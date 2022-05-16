@@ -137,9 +137,11 @@ require_once(__DIR__ . '/../templates/dashboard-top-template.php')
         if (SHOWMESSAGE) {
          if (confirm("WARNING!!\nDo you really want to generate groups? \n \
          Note: If there are already groups for this edition, all of the information will be overwritten, which means, every progress will be lost")) {
-             e.target.form.submit();
+            e.target.form.submit();
+         }
+        }else{
+            e.target.form.submit();
          }   
-        }
     });
 </script>
 <?php
