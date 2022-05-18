@@ -31,7 +31,7 @@ if ($now > $_SESSION['expire']) {
     <aside class="sidenav navbar navbar-vertical navbar-expand-xs border-0 border-radius-xl my-3 fixed-start ms-3 bg-cdark" id="sidenav-main" style="z-index:99;">
         <div class="sidenav-header">
             <i class="fas fa-times p-3 cursor-pointer text-secondary opacity-5 position-absolute end-0 top-0 d-none d-xl-none" aria-hidden="true" id="iconSidenav"></i>
-            <a class="navbar-brand m-0" href="/">
+            <a class="navbar-brand m-0" href="/dashboard.php">
                 <img src="https://img.uefa.com/imgml/uefacom/ucl/2021/logos/logo_dark.svg" class="navbar-brand-img h-100" alt="main_logo">
                 <span class="ms-1 font-weight-bold text-light">Management console</span>
             </a>
@@ -40,39 +40,39 @@ if ($now > $_SESSION['expire']) {
 
         <ul class="navbar-nav">
             <li class="nav-item">
-                <a class="nav-link <?php echo (isset($option) ? (($option==0)?"active":"") : "") ?>" href="/dashboard.php">
+                <a class="nav-link <?php echo (isset($option) ? (($option == 0) ? "active" : "") : "") ?>" href="/dashboard.php">
                     <span class="nav-link-text ms-1">Start</span>
                 </a>
             </li>
 
             <li class="nav-item">
-                <a class="nav-link <?php echo (isset($option) ? (($option==1)?"active":"") : "") ?>" href="../dashboard/editions-admin.php">
+                <a class="nav-link <?php echo (isset($option) ? (($option == 1) ? "active" : "") : "") ?>" href="../dashboard/editions-admin.php">
 
                     <span class="nav-link-text ms-1 text-wrap">Edition management</span>
                 </a>
             </li>
 
             <li class="nav-item">
-                <a class="nav-link <?php echo (isset($option) ? (($option==2)?"active":"") : "") ?>" href="../dashboard/country-admin.php">
+                <a class="nav-link <?php echo (isset($option) ? (($option == 2) ? "active" : "") : "") ?>" href="../dashboard/country-admin.php">
 
                     <span class="nav-link-text ms-1 text-wrap">Country management</span>
                 </a>
             </li>
 
             <li class="nav-item">
-                <a class="nav-link <?php echo (isset($option) ? (($option==3)?"active":"") : "") ?>" href="../dashboard/teams-admin.php">
+                <a class="nav-link <?php echo (isset($option) ? (($option == 3) ? "active" : "") : "") ?>" href="../dashboard/teams-admin.php">
                     <span class="nav-link-text ms-1 text-wrap">Team management</span>
                 </a>
             </li>
 
             <li class="nav-item">
-                <a class="nav-link <?php echo (isset($option) ? (($option==4)?"active":"") : "") ?>" href="../dashboard/draws-admin.php">
+                <a class="nav-link <?php echo (isset($option) ? (($option == 4) ? "active" : "") : "") ?>" href="../dashboard/draws-admin.php">
                     <span class="nav-link-text ms-1 text-wrap">Draw</span>
                 </a>
             </li>
 
             <li class="nav-item">
-                <a class="nav-link <?php echo (isset($option) ? (($option==5)?"active":"") : "") ?>" href="../dashboard/results-admin.php">
+                <a class="nav-link <?php echo (isset($option) ? (($option == 5) ? "active" : "") : "") ?>" href="../dashboard/results-admin.php">
                     <span class="nav-link-text ms-1 text-wrap">Results management</span>
                 </a>
             </li>
@@ -94,7 +94,9 @@ if ($now > $_SESSION['expire']) {
             <div class="container-fluid py-1 px-3">
                 <div class="d-flex justify-content-between align-items-center">
                     <div class="me-3">
-                        <img src="/assets/images/ucl-logo.svg" alt="ucl-image" width="100%" height="100%" style="filter: brightness(0) invert(1);">
+                        <a href="/index.php">
+                            <img src="/assets/images/ucl-logo.svg" alt="ucl-image" width="100%" height="100%" style="filter: brightness(0) invert(1);">
+                        </a>
                     </div>
                 </div>
                 <div class="d-flex justify-content-center align-items-center" id="navbar">

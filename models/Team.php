@@ -257,10 +257,63 @@ class Team
         return null;
     }
     public static function getGroupsStatus($connection){
-        $result = $connection->query("
-        SELECT teams.id,teams.name as name, countries.name as country 
-        FROM teams JOIN countries on country_id=countries.id
-        ");
-        $result->fetch_array(MYSQLI_ASSOC);
+        $result = $connection->query("select id from editions order by id desc limit 1");
+        if($result->num_rows >= 1){
+            $edition = $result->fetch_array(MYSQLI_ASSOC)["id"];
+            $result=$connection->query("
+            select tgroups.name as tgroup, teams.name as team, count(match_details.id) as mp, sum(goals_favor) as goals_favor,sum(goals_against) as goals_against, GROUP_CONCAT(match_details.result) as results 
+            from group_teams 
+            left join match_details on match_details.team_id=group_teams.team_id
+            inner join tgroups on group_id=tgroups.id
+            inner join teams on teams.id=group_teams.team_id
+            where group_teams.edition_id=$edition
+            group by group_teams.team_id ORDER BY goals_favor - goals_against DESC");
+            if($result){
+                $getPoints = function ($array){
+                    $points = 0;
+                    $array = array_count_values($array);
+                    if(isset($array["WIN"]))
+                        $points += $array["WIN"] * 3;
+                    if(isset($array["DRAW"]))
+                        $points += $array["DRAW"] * 1;
+                    return $points;
+                };
+                $getQuantityTypeMatch= function($string,$matchId){
+                    $array= explode(",",$string);
+                    $array = array_count_values($array);
+                    if(isset($array[$matchId]))
+                        return $array[$matchId];
+                    return 0;
+                };
+                $result = $result->fetch_all(MYSQLI_ASSOC);
+                $groups = array_unique(array_column($result,"tgroup","tgroup"));
+                $groups=array_fill_keys($groups, []);
+                foreach ($result as $row) {
+                    if (isset($groups[$row["tgroup"]])) {
+                        $groups[$row["tgroup"]][]=[
+                            "team"=>$row["team"],
+                            "matches_played"=>$row["mp"],
+                            "matches_win"=>$getQuantityTypeMatch($row["results"],"WIN"),
+                            "matches_draw"=>$getQuantityTypeMatch($row["results"],"DRAW"),
+                            "matches_lose"=>$getQuantityTypeMatch($row["results"],"LOSE"),
+                            "goals_favor"=>$row["goals_favor"],
+                            "goals_against"=>$row["goals_against"],
+                            "goals_difference"=>((int)$row["goals_favor"])- ((int)$row["goals_against"]),
+                            "points"=>$getPoints(explode(",",$row["results"]))
+
+                        ];  
+                    }
+                }
+                
+                if(!empty($groups)){
+                    foreach ($groups as $group => &$teams) {
+                        array_multisort(array_column($groups[$group], 'points'), SORT_DESC, $groups[$group]);
+                        ksort($groups);
+                    }
+                }
+                return $groups;
+            }
+        }
+        return null;
     }
 }
