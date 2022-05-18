@@ -3,13 +3,14 @@ session_start();
 if (!$_SESSION['verification']) {
     header("Location: /index.php");
 }
-/*
+
 $now = time();
 
 if ($now > $_SESSION['expire']) {
     session_destroy();
     header("Location: /index.php");
-}*/
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -82,7 +83,7 @@ if ($now > $_SESSION['expire']) {
             </li>
             <li class="nav-item">
                 <a class="nav-link  " href="../logout.php">
-                    <span class="nav-link-text ms-1">Cerrar sesión</span>
+                    <span class="nav-link-text ms-1">Logout</span>
                 </a>
             </li>
         </ul>

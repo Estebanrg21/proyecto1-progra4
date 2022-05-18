@@ -47,7 +47,8 @@ class MatchTeams
     function update()
     {
         $response = 12;
-        if (empty($this->id) || empty($this->goalsLocal) || empty($this->goalsVisit)) return 10;
+        if (empty($this->id) || (empty($this->goalsLocal) && $this->goalsLocal!=0)
+         || empty($this->goalsVisit)&& $this->goalsVisit!=0) return 10;
         $existant = MatchTeams::getMatch($this->connection, $this->id,false);
         if ($existant) {
             $this->localTeam = $existant["local"];

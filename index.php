@@ -23,10 +23,11 @@ $groups = Team::getGroupsStatus($connection);
 
 <body class="">
     <?php
+    session_start();
     $login = "/login.php";
     $dashboard = "/dashboard.php";
     $mainLink = (!isset($_SESSION['verification'])) ? $login : $dashboard;
-    $linkText = (!isset($_SESSION['verification'])) ? "Login" : "Panel de control";
+    $linkText = (!isset($_SESSION['verification'])) ? "Login" : "Control panel";
     ?>
     <main class="main-content position-relative h-100 border-radius-lg ">
         <nav class="navbar navbar-main navbar-expand-lg px-0 mx-4 shadow-none border-radius-xl py-0 pt-3" id="navbarBlur" navbar-scroll="true">
@@ -44,7 +45,7 @@ $groups = Team::getGroupsStatus($connection);
                         <li class="nav-item d-flex align-items-center">
                             <a href="<?php echo (isset($mainLink) ? $mainLink : "") ?>" class="nav-link  font-weight-bold px-0 text-white">
                                 <i class="fa fa-user me-sm-1"></i>
-                                <span class="d-sm-inline d-none"><?php echo (isset($_SESSION['username']) ? $_SESSION['username'] : (isset($linkText) ? $linkText : "")) ?></span>
+                                <span class="d-sm-inline d-none"><?php echo  (isset($linkText) ? $linkText : "") ?></span>
                             </a>
                         </li>
 
@@ -84,10 +85,10 @@ $groups = Team::getGroupsStatus($connection);
                         foreach ($teams as $row) {
                             echo    "<tr>
                                                 <td class=\"align-middle text-center text-sm\">
-                                                        <p class=\"text-xs font-weight-bold mb-0 \">" . $row["team"] . "</p>
+                                                        <p class=\"text-xs font-weight-bold mb-0 \">" . $row["name"] . "</p>
                                                 </td>  
                                                 <td class=\"align-middle text-center text-sm\">
-                                                        <p class=\"text-xs font-weight-bold mb-0 \">" . $row["matches_played"] . "</p>
+                                                        <p class=\"text-xs font-weight-bold mb-0 \">" . $row["mp"] . "</p>
                                                 </td>
                                                 <td class=\"align-middle text-center text-sm\">
                                                     <p class=\"text-xs font-weight-bold mb-0 \">" . $row["matches_win"] . "</p>
@@ -96,7 +97,7 @@ $groups = Team::getGroupsStatus($connection);
                                                     <p class=\"text-xs font-weight-bold mb-0 \">" . $row["matches_draw"] . "</p>
                                                 </td>
                                                 <td class=\"align-middle text-center text-sm\">
-                                                    <p class=\"text-xs font-weight-bold mb-0 \">" . $row["matches_lose"] . "</p>
+                                                    <p class=\"text-xs font-weight-bold mb-0 \">" . $row["matches_loses"] . "</p>
                                                 </td>   
                                                 <td class=\"align-middle text-center text-sm\">
                                                     <p class=\"text-xs font-weight-bold mb-0 \">" . $row["goals_favor"] . "</p>
